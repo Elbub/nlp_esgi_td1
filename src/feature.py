@@ -1,4 +1,5 @@
 def make_features(df):
+    # TODO :
     y = df["is_comic"]
 
     # Fake X: constant equal to 0

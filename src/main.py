@@ -1,9 +1,13 @@
 import click
 import joblib
+import pandas as pd
 
+from datetime import datetime
 from data import make_dataset
 from feature import make_features
 from models import make_model
+from sklearn.model_selection import KFold, train_test_split
+
 
 @click.group()
 def cli():
@@ -13,27 +17,55 @@ def cli():
 @click.command()
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
-def train(input_filename, model_dump_filename):
-    df = make_dataset(input_filename)
-    X, y = make_features(df)
 
-    model = make_model()
+
+def train(input_filename: pd.DataFrame, model_dump_filename: str = "models/dump.json", model=None):
+    if isinstance(input_filename, str):
+        input = make_dataset(input_filename)
+    elif not isinstance(input_filename, pd.DataFrame):
+        raise TypeError("Input must be either a dataframe or a string")
+
+    X, y = make_features(input)
+
+    if model is None:
+        model = make_model()
+
     model.fit(X, y)
 
     return joblib.dump(model, model_dump_filename)
+
+
 
 
 @click.command()
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
 @click.option("--output_filename", default="data/processed/prediction.csv", help="Output file for predictions")
-def predict(input_filename, model_dump_filename, output_filename):
+
+
+def predict(model_dump_filename,
+            input_filename="data/raw/test.csv",
+            output_filename: str = "data/processed/prediction.csv"):
+    if isinstance(input_filename, str):
+        input_filename = make_dataset(input_filename)
+
+    elif not isinstance(input_filename, pd.DataFrame):
+        raise TypeError("Input must be either a dataframe or a string")
+
     model = joblib.load(model_dump_filename)
-    pass
+    dataset = input_filename
+
+    result = model.predict(dataset)
+
+    result.to_csv(output_filename, index=False)
+
+
 
 
 @click.command()
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
+
+
 def evaluate(input_filename):
     # Read CSV
     df = make_dataset(input_filename)
@@ -42,15 +74,25 @@ def evaluate(input_filename):
     X, y = make_features(df)
 
     # Object with .fit, .predict methods
-    model = make_model()
+    model = make_model()        # TODO : ajouter une str
 
     # Run k-fold cross validation. Print results
     return evaluate_model(model, X, y)
 
 
-def evaluate_model(model, X, y):
+def evaluate_model(model: str,
+                   X,
+                   y,
+                   nb_split: int = 3):
     # Run k-fold cross validation. Print results
-    pass
+    kf = KFold(n_splits=nb_split)
+
+    for train_df, test_df in kf.split(X):
+        model_name = "models/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".json"
+        trained_model = train(input_filename=train_df, model=model, model_dump_filename=model_name)
+        predict(input=test_df, model_dump_filename=trained_model)
+
+
 
 
 cli.add_command(train)
