@@ -3,8 +3,6 @@ import joblib
 import pandas as pd
 
 from datetime import datetime
-
-
 from data import make_dataset
 from feature import make_features
 from models import make_model
@@ -28,12 +26,13 @@ def train(input_filename: pd.DataFrame, model_dump_filename: str = "models/dump.
     elif not isinstance(input_filename, pd.DataFrame):
         raise TypeError("Input must be either a dataframe or a string")
 
-    df = pd.read_csv(input)
-    
     if model is None:
         model = make_model()
 
-    model.fit(df)
+    X = input.iloc[:,0:-1]
+    y = input.iloc[:,-1:]
+
+    model.fit(X, y)
 
     return joblib.dump(model, model_dump_filename)
 

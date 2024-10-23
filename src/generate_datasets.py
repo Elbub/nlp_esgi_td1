@@ -32,9 +32,9 @@ def split_dataset(file_path: str,
     evaluate_dataset = featured_dataset[int(ratio_predict * len_df) : int(ratio_predict * len_df) + int(ratio_evaluate * len_df)]
     predict_dataset = featured_dataset[int(ratio_predict * len_df) + int(ratio_evaluate * len_df) : ]
 
-    save_path = file_path.rsplit("/", 1)[0]
+    save_path = file_path.rsplit("/", 1)[0] + '/'
     train_dataset.to_csv(save_path + "train.csv", index=False, mode='w')
-    predict_dataset.to_csv(save_path + "testp.csv", index=False, mode='w')
+    predict_dataset.to_csv(save_path + "test.csv", index=False, mode='w')
     evaluate_dataset.to_csv(save_path + "evaluate.csv", index=False, mode='w')
 
 
