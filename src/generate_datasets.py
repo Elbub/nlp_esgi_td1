@@ -24,11 +24,12 @@ def split_dataset(file_path: str,
         rand = random.randint(0, 1_000)
     dataset = make_dataset(file_path)
     shuffled_dataset = dataset.sample(frac=1, random_state=rand)
+    featured_dataset = make_dataset(shuffled_dataset)
 
-    len_df = len(shuffled_dataset)
-    train_dataset = shuffled_dataset[0: int(ratio_train * len_df)]
-    evaluate_dataset = shuffled_dataset[int(ratio_predict * len_df) : int(ratio_predict * len_df) + int(ratio_evaluate * len_df)]
-    predict_dataset = shuffled_dataset[int(ratio_predict * len_df) + int(ratio_evaluate * len_df) : ]
+    len_df = len(featured_dataset)
+    train_dataset = featured_dataset[0: int(ratio_train * len_df)]
+    evaluate_dataset = featured_dataset[int(ratio_predict * len_df) : int(ratio_predict * len_df) + int(ratio_evaluate * len_df)]
+    predict_dataset = featured_dataset[int(ratio_predict * len_df) + int(ratio_evaluate * len_df) : ]
 
     save_path = file_path.rsplit("/", 1)[0]
     train_dataset.to_csv(save_path + "train.csv", index=False, mode='w')
