@@ -2,6 +2,7 @@ import random
 
 
 from src.data import make_dataset
+from src.feature import make_features
 
 
 def split_dataset(file_path: str,
@@ -24,7 +25,7 @@ def split_dataset(file_path: str,
         rand = random.randint(0, 1_000)
     dataset = make_dataset(file_path)
     shuffled_dataset = dataset.sample(frac=1, random_state=rand)
-    featured_dataset = make_dataset(shuffled_dataset)
+    featured_dataset = make_features(shuffled_dataset)
 
     len_df = len(featured_dataset)
     train_dataset = featured_dataset[0: int(ratio_train * len_df)]
