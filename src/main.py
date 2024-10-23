@@ -27,13 +27,11 @@ def train(input_filename: pd.DataFrame, model_dump_filename: str = "models/dump.
         input = make_dataset(input_filename)
     elif not isinstance(input_filename, pd.DataFrame):
         raise TypeError("Input must be either a dataframe or a string")
-
-    df = pd.read_csv(input)
     
     if model is None:
         model = make_model()
 
-    model.fit(df)
+    model.fit(input)
 
     return joblib.dump(model, model_dump_filename)
 
