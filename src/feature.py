@@ -13,7 +13,7 @@ def make_features(df):
     count_matrix = one_hot.fit_transform(df["video_name"])
     count_array = count_matrix.toarray()
     X = pd.DataFrame(data=count_array,columns = one_hot.get_feature_names_out())
-    X.insert(X.shape[1], "is_comic", df["is_comic"], True)
+    X.insert(X.shape[1], "is_comic", df["is_comic"])
     return X
 
 
