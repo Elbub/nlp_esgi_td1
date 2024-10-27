@@ -8,6 +8,7 @@ from feature import make_features
 from models import make_model
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import KFold, train_test_split
+from typing import Any
 
 
 @click.group()
@@ -15,13 +16,13 @@ def cli():
     pass
 
 
-@click.command()
-@click.option("--input_filename", default="data/raw/train.csv", help="File training data")
-@click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
-@click.option("--model", default="random_forest", help="Model type")
+# @click.command()
+# @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
+# @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
+# @click.option("--model", default="random_forest", help="Model type")
 
 
-def train(input_filename: pd.DataFrame,
+def train(input_filename,
           model_dump_filename: str = "models/dump.json",
           model="random_forest"):
     if isinstance(input_filename, str):
@@ -70,17 +71,19 @@ def predict(model_dump_filename,
 
 @click.command()
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
+@click.option("--model", default="random_forest", help="Model type")
 
 
-def evaluate(input_filename):
+def evaluate(input_filename, model="random_forest"):
     # Read CSV
-    df = make_dataset(input_filename)
+    input = make_dataset(input_filename)
 
     # Make features (tokenization, lowercase, stopwords, stemming...)
-    X, y = make_features(df)
+    X = input.iloc[:,0:-1]
+    y = input.iloc[:,-1:]
 
     # Object with .fit, .predict methods
-    model = make_model()        # TODO : ajouter une str
+    # model = make_model()        # TODO : ajouter une str
 
     # Run k-fold cross validation. Print results
     return evaluate_model(model, X, y)
@@ -95,13 +98,14 @@ def evaluate_model(model: str,
 
     for train_df, test_df in kf.split(X):
         model_name = "models/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".json"
-        trained_model = train(input_filename=train_df, model=model, model_dump_filename=model_name)
-        predict(input=test_df, model_dump_filename=trained_model)
+        output_filename = "data/processed/prediction_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv"
+        trained_model = train(input_filename=train_df, model_dump_filename=model_name, model=model)
+        predict(input=test_df, model_dump_filename=trained_model, output_filename=output_filename)
 
 
 
 
-cli.add_command(train)
+# cli.add_command(train)
 cli.add_command(predict)
 cli.add_command(evaluate)
 
