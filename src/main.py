@@ -16,24 +16,27 @@ def cli():
     pass
 
 
-# @click.command()
-# @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
-# @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
-# @click.option("--model", default="random_forest", help="Model type")
+@click.command()
+@click.option("--input_filename", default="data/raw/train.csv", help="File training data")
+@click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
+@click.option("--model", default="random_forest", help="Model type")
 
 
 def train(input_filename,
           model_dump_filename: str = "models/dump.json",
           model="random_forest"):
     if isinstance(input_filename, str):
-        input = make_dataset(input_filename)
+        input_filename = make_dataset(input_filename)
     elif not isinstance(input_filename, pd.DataFrame):
-        raise TypeError("Input must be either a dataframe or a string")
+        try:
+            input_filename = pd.DataFrame(input_filename)
+        except:
+            raise TypeError("Input must be either a dataframe or a string")
 
     model = make_model()
 
-    X = input.iloc[:,0:-1]
-    y = input.iloc[:,-1:]
+    X = input_filename.iloc[:,0:-1]
+    y = input_filename.iloc[:,-1:]
 
     model.fit(X, y)
 
@@ -57,7 +60,10 @@ def predict(model_dump_filename,
     elif not isinstance(input_filename, pd.DataFrame):
         raise TypeError("Input must be either a dataframe or a string")
 
-    model = joblib.load(model_dump_filename)
+    if isinstance(model_dump_filename, str):
+        model = joblib.load(model_dump_filename)
+    elif isinstance(model_dump_filename, list):
+        model = joblib.load(model_dump_filename[0])
     dataset = input_filename
 
     X = dataset.iloc[:, 0:-1]
@@ -79,33 +85,32 @@ def evaluate(input_filename, model="random_forest"):
     input = make_dataset(input_filename)
 
     # Make features (tokenization, lowercase, stopwords, stemming...)
-    X = input.iloc[:,0:-1]
-    y = input.iloc[:,-1:]
+    # X = input.iloc[:,0:-1]
+    # y = input.iloc[:,-1:]
 
     # Object with .fit, .predict methods
-    # model = make_model()        # TODO : ajouter une str
+    # model = make_model()
 
     # Run k-fold cross validation. Print results
-    return evaluate_model(model, X, y)
+    return evaluate_model(model, input)
 
 
 def evaluate_model(model: str,
-                   X,
-                   y,
+                   input,
                    nb_split: int = 3):
     # Run k-fold cross validation. Print results
     kf = KFold(n_splits=nb_split)
 
-    for train_df, test_df in kf.split(X):
-        model_name = "models/" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".json"
+    for id_train, id_test in kf.split(input):
+        model_name = f"../models/model.json"
         output_filename = "data/processed/prediction_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv"
-        trained_model = train(input_filename=train_df, model_dump_filename=model_name, model=model)
-        predict(input=test_df, model_dump_filename=trained_model, output_filename=output_filename)
+        trained_model = train(input_filename=input.iloc[id_train], model_dump_filename=model_name, model=model)
+        predict(input_filename=input.iloc[id_test], model_dump_filename=trained_model, output_filename=output_filename)
 
 
 
 
-# cli.add_command(train)
+cli.add_command(train)
 cli.add_command(predict)
 cli.add_command(evaluate)
 
