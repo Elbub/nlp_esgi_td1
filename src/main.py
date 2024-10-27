@@ -3,8 +3,6 @@ import joblib
 import pandas as pd
 
 from datetime import datetime
-
-
 from data import make_dataset
 from feature import make_features
 from models import make_model
@@ -20,16 +18,18 @@ def cli():
 @click.command()
 @click.option("--input_filename", default="data/raw/train.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
+@click.option("--model", default="random_forest", help="Model type")
 
 
-def train(input_filename: pd.DataFrame, model_dump_filename: str = "models/dump.json", model=None):
+def train(input_filename: pd.DataFrame,
+          model_dump_filename: str = "models/dump.json",
+          model="random_forest"):
     if isinstance(input_filename, str):
         input = make_dataset(input_filename)
     elif not isinstance(input_filename, pd.DataFrame):
         raise TypeError("Input must be either a dataframe or a string")
 
-    if model is None:
-        model = make_model()
+    model = make_model()
 
     X = input.iloc[:,0:-1]
     y = input.iloc[:,-1:]
@@ -42,7 +42,7 @@ def train(input_filename: pd.DataFrame, model_dump_filename: str = "models/dump.
 
 
 @click.command()
-@click.option("--input_filename", default="data/raw/train.csv", help="File training data")
+@click.option("--input_filename", default="data/raw/test.csv", help="File training data")
 @click.option("--model_dump_filename", default="models/dump.json", help="File to dump model")
 @click.option("--output_filename", default="data/processed/prediction.csv", help="Output file for predictions")
 
@@ -59,9 +59,11 @@ def predict(model_dump_filename,
     model = joblib.load(model_dump_filename)
     dataset = input_filename
 
-    result = model.predict(dataset)
+    X = dataset.iloc[:, 0:-1]
+    y = dataset.iloc[:, -1:]
+    result = model.predict(X)
 
-    result.to_csv(output_filename, index=False)
+    pd.DataFrame(result).to_csv(output_filename, index=False)
 
 
 
